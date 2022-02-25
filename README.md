@@ -10,3 +10,4 @@ Can just be ran normally, nothing needed to configure.
 main(a, b) : a = {Artificial Dataset = 1, Iris Dataset = 0}, b = Number of iterations 
 
 > Requires NumPy, MatPlotLib, sklearn and pandas
+> iris.data must be in the same folder for the import to work
