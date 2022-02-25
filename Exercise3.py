@@ -223,19 +223,6 @@ def pso_algorithm(swarm, data, n_cluster):
     return keep_best_fit, global_best_pos
 
 
-def kmeans(data, n_initialisations, n_cluster):
-    all_centroids = np.empty((n_initialisations, n_cluster, data.shape[1]))
-    for i in range(n_initialisations):
-        centroid_indices = np.random.choice(data.shape[0], n_cluster, False)
-        centroids = data[centroid_indices]
-        all_centroids[i] = centroids
-    for i in range(all_centroids.shape[0]):
-        current_centroid = all_centroids[i]
-        for vector in data:
-            pass # calculate distances
-    pass
-
-
 def main(artificial, n_runs):
     """
     Run required functions
@@ -261,13 +248,27 @@ def main(artificial, n_runs):
     if artificial:
         compare_scatters(data_points, predictions, true_classes)
     plot_confusion_matrix(true_classes, predictions)
-    # Also needs to run for 30 trials, add later
-    # kmeans(data_points, 10, n_c)
-    kmeans_t = KMeans(n_c, init='random', n_init=10, max_iter=100).fit(data_points)
-    predictions = predict_classes(data_points, kmeans_t.cluster_centers_)
+    kmeans_fit = np.zeros(n_runs)
+    kmeans_pos = np.zeros((n_runs, n_c, data_points.shape[1]))
+    for run in range(n_runs):
+        kmeans_t = KMeans(n_c, init='random', n_init=10, max_iter=100).fit(data_points)
+        predictions = predict_classes(data_points, kmeans_t.cluster_centers_)
+        k_fit = calculate_fitness(data_points, predictions, kmeans_t.cluster_centers_, n_c)
+        kmeans_fit[run] = k_fit
+        kmeans_pos[run] = kmeans_t.cluster_centers_
+    overall_best_fit_id = np.argmin(kmeans_fit)
+    end_pos = kmeans_pos[overall_best_fit_id]
+    predictions = predict_classes(data_points, end_pos)
     if artificial:
         compare_scatters(data_points, predictions, true_classes)
     plot_confusion_matrix(predictions, true_classes)
+    plt.plot(np.arange(0, n_runs), kmeans_fit, label='kmeans', color='g')
+    plt.plot(np.arange(0, n_runs), end_fit, label='PSO', color='b')
+    plt.xlabel('runs')
+    plt.ylabel('fitness')
+    plt.title('fitness of each run comparing kmeans and PSO')
+    plt.legend(loc=1)
+    plt.show()
 
 
 # Parameters as stated in paper
@@ -278,4 +279,5 @@ iris_data = pd.read_csv('iris.data', sep=",", header=None)
 dict_map = {'Iris-setosa': 0, 'Iris-versicolor': 1, 'Iris-virginica': 2}
 iris_data.iloc[:, 4] = iris_data.iloc[:, 4].map(dict_map)
 iris_data = iris_data.sample(frac=1).reset_index(drop=True)
-main(0, 1)
+main(1, 30)
+main(0, 30)
